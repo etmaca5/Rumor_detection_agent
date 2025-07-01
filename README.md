@@ -169,3 +169,4 @@ The system is designed to be robust:
 
 TODO: ADD a specific user's scraped posts for an example
 TODO: ADD the exact rumor and also the rumor category
+TODO: Add example usage script (bash)
