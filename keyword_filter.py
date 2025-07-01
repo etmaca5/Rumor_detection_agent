@@ -41,8 +41,10 @@ class KeywordFilter:
 
     
 
-    def run_filter(self, post):
+    def run_filter(self, post: str) -> bool:
+        """Check if post contains any keywords"""
+        post_lower = post.lower()
         for kw in self.keywords:
-            if kw.lower() in post:
+            if kw.lower() in post_lower:
                 return True
         return False
