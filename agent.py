@@ -49,10 +49,11 @@ class Agent:
     def get_rumor_category(self, rumor_type: int) -> Optional[str]:
         return RUMOR_INT_TO_CLASS.get(rumor_type)
     
-    def classify_csv(self, csv_path: str = None, verbose: bool = False) -> Dict:
+    def classify_csv(self, csv_path: str = None, verbose: bool = False, max_posts: int = 2000) -> Dict:
         """
         Process a CSV file of posts and classify each one
-        verbose: If True, print details for each post. If False, only print summary.
+        verbose: If true, print details for each post. If false, only print summary.
+        max_posts: Maximum number of posts to process (default: 2000)
         """
         # default to the Trump posts CSV
         if csv_path is None:
@@ -72,8 +73,13 @@ class Agent:
                     post_text = row[0].strip()
                     posts.append(post_text)
         
-        total_posts = len(posts)
-        print(f"Total posts to classify: {total_posts}")
+        # limit to max_posts
+        if len(posts) > max_posts:
+            posts = posts[:max_posts]
+            print(f"Limited to first {max_posts} posts")
+        else:
+            total_posts = len(posts)
+            print(f"Total posts to classify: {total_posts}")
         print("=" * 30)
 
         misinformation_count = 0
