@@ -1,4 +1,4 @@
-from rumors_constants import *
+from rumor_constants import *
 from keyword_filter import KeywordFilter
 from finetuned_roberta import RobertaModel
 from llm_labeler import LlmLabeler
@@ -54,6 +54,7 @@ class Agent:
         Process a CSV file of posts and classify each one
         verbose: If true, print details for each post. If false, only print summary.
         max_posts: Maximum number of posts to process (default: 2000)
+        note: results is returned with the text in lowercase form - TODO: potentially improve returning format
         """
         # default to the Trump posts CSV
         if csv_path is None:
