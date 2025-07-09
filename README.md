@@ -1,120 +1,87 @@
 # Rumor Detection Agent
 
-A comprehensive system for detecting and classifying election-related rumors and misinformation in social media posts. The agent uses a multi-stage pipeline combining fine-tuned RoBERTa models, keyword filtering, and LLM-based verification to accurately identify and categorize different types of election rumors.
-
-## Features
-
-- **Multi-stage Classification Pipeline**: Combines multiple approaches for high accuracy
-- **16 Rumor Categories**: Covers various types of election-related misinformation (TODO: add link to )
-- **Flexible Architecture**: Easy to extend with additional models or filters
-- **Batch Processing**: Support for processing multiple posts at once
-- **Robust Error Handling**: Graceful fallbacks when components are unavailable
+A multi-stage agent for detecting and classifying election-related rumors in social media posts. Combines fine-tuned RoBERTa models, keyword filtering, and LLM verification for precision rumor detection of social media posts.
 
 ## Architecture
 
-The system consists of several key components:
+The system uses a sequential filtering approach:
 
-1. **RoBERTa Model** (`finetuned_roberta.py`): Fine-tuned transformer model for initial disinformation detection
-2. **Keyword Filter** (`keyword_filter.py`): Rule-based filtering using relevant keywords
-3. **LLM Labeler** (`llm_labeler.py`): GPT-based verification and classification
-4. **Prompt Generator** (`prompts.py`): Manages prompts for LLM interactions
-5. **Agent** (`agent.py`): Main orchestrator that coordinates all components
+1. **RoBERTa Model**: Fine-tuned transformer for initial disinformation detection
+2. **Keyword Filter**: Rule-based filtering using election-specific keywords  
+3. **LLM Screening**: GPT-based initial rumor identification
+4. **LLM Verification**: Strict classification into specific rumor types
+
+This multi-stage design ensures high precision by requiring posts to pass multiple verification steps.
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd Rumor_detection_agent
-```
-
-2. Install dependencies:
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up your OpenAI API key (choose one method):
-
-**Method 1: Environment file (recommended)**
+2. Set up OpenAI API key:
 ```bash
-# Copy the example file
-cp .env.example .env
-# Edit .env and add your API key
 echo "OPENAI_API_KEY=your-api-key-here" > .env
-```
-
-**Method 2: Environment variable**
-```bash
-export OPENAI_API_KEY='your-api-key-here'
-```
-
-**Method 3: Pass directly in code**
-```python
-agent = Agent(openai_api_key='your-api-key-here')
 ```
 
 ## Usage
 
-### Basic Usage
-
+### Single Post Classification
 ```python
 from agent import Agent
 
-# Initialize the agent
-agent = Agent(roberta_model_path=None)  # Set path if you have a trained model
-
-# Classify a single post
-post = "The voter rolls are dirty and haven't been cleaned in years!"
-is_rumor, rumor_type = agent.classify_post(post)
+agent = Agent()
+is_rumor, rumor_type = agent.classify("The voter rolls are dirty!")
 
 if is_rumor:
-    print(f"Rumor detected! Type: {rumor_type}")
-    print(f"Description: {agent.get_rumor_info(rumor_type)}")
-else:
-    print("Not a rumor")
+    print(f"Rumor Type: {rumor_type}")
+    print(f"Category: {agent.get_rumor_category(rumor_type)}")
+```
+
+### CSV File Processing
+```python
+# defaults to included example posts
+results = agent.classify_csv()
+
+# Process custom CSV with detailed output
+results = agent.classify_csv("your_posts.csv", verbose=True)
 ```
 
 ### Batch Processing
-
 ```python
 posts = [
-    "Trump is the best candidate!",
+    "The election process is fundamentally fair",
     "Dead people are voting in this election",
     "The mail-in ballot system is fraudulent"
 ]
 
 results = agent.classify_batch(posts)
-for post, (is_rumor, rumor_type) in zip(posts, results):
-    print(f"Post: {post}")
-    print(f"Rumor: {is_rumor}, Type: {rumor_type}")
 ```
 
-### Running the Example
 
-```bash
-python example_usage.py
-```
+## Election Rumor Types
 
-## Rumor Categories
+This framework detects 16 specific election rumors as examples of the types of misinformation that can be identified:
 
-The system identifies 16 types of election-related rumors:
+1. **Dirty Voter Rolls**: Election officials don't clean the voter rolls. The voter rolls are inaccurate and they are not updated.
+2. **Ballot Mail-In Fraud**: People can easily violate the integrity of the mail-in/absentee ballot request process to receive and cast unauthorized mail-in/absentee ballots, or prevent authorized voters from voting successfully in person.
+3. **Drop Box Tampering**: Drop boxes used by election officials to collect returned mail-in/absentee ballots can be easily tampered with, stolen, or destroyed.
+4. **Software Security**: Voting system software is not reviewed or tested and can be easily manipulated.
+5. **Dead Voters**: Votes are being cast on behalf of dead people and these votes are being counted.
+6. **Voter Registration Data Breach**: Someone possessing or posting voter registration data means voter registration databases have been hacked.
+7. **Voter Registration Website Outage**: An online voter registration website experiences an outage and claims are made the election has been compromised.
+8. **Hacking into Jurisdictions**: If state or local jurisdiction information technology (IT) has been compromised, the election results cannot be trusted.
+9. **Voter Registration Manipulation**: Videos, images or emails suggesting voter registration information is being manipulated means voters will not be able to vote.
+10. **Extra Mail-in Ballots**: A malicious actor can easily defraud an election by printing and sending in extra mail-in ballots.
+11. **Ballot FWAB Fraud**: A malicious actor can easily defraud an election using the Federal Write-In Absentee Ballot (FWAB).
+12. **Ballot Scanner Issues**: Problems with ballot scanners at my voting site mean that my ballot won’t be counted.
+13. **Ballot Writing Instrument Issue**: Poll workers gave specific writing instruments, such as Sharpies, only to specific voters to cause their ballots to be rejected.
+14. **Voter Intimidation Tactics**: Observers in the polling place are permitted to intimidate voters, campaign, and interfere with voting.
+15. **Nonexistent Vote Disclosure**: Someone is claiming to know who I voted for.
+16. **Polling Lookup Outage**: If polling place lookup sites experience an outage, election infrastructure must have been compromised.
 
-1. **Dirty Voter Rolls**: Claims about uncleaned voter registration lists
-2. **Ballot Mail-In Fraud**: Allegations about mail-in ballot security
-3. **Drop Box Tampering**: Claims about ballot drop box security
-4. **Software Security**: Allegations about voting system vulnerabilities
-5. **Dead Voters**: Claims about deceased people voting
-6. **Voter Registration Data Breach**: Allegations about database hacks
-7. **Voter Registration Website Outage**: Claims about system compromises
-8. **Hacking into Jurisdictions**: Allegations about IT system breaches
-9. **Voter Registration Manipulation**: Claims about data tampering
-10. **Extra Mail-in Ballots**: Allegations about fraudulent ballot printing
-11. **Ballot FWAB Fraud**: Claims about Federal Write-In ballot abuse
-12. **Ballot Scanner Issues**: Allegations about scanner problems
-13. **Ballot Writing Instrument Issue**: Claims about pen/marker problems
-14. **Voter Intimidation Tactics**: Allegations about polling place interference
-15. **Nonexistent Vote Disclosure**: Claims about vote privacy breaches
-16. **Polling Lookup Outage**: Claims about lookup system compromises
+These categories demonstrate how the framework can be applied to systematically detect domain-specific misinformation patterns.
 
 ## Configuration
 
@@ -142,31 +109,11 @@ from llm_labeler import LlmLabeler
 labeler = LlmLabeler(model="gpt-4", temperature=0.1)
 ```
 
-## Pipeline Logic
-
-1. **RoBERTa Screening**: Initial classification using fine-tuned model
-2. **Keyword Filtering**: Fallback for posts not caught by RoBERTa
-3. **LLM Initial Screening**: Broad rumor detection using GPT
-4. **LLM Verification**: Strict classification into specific rumor types
-
-Posts must pass through multiple stages to be classified as rumors, ensuring high precision.
-
-## Error Handling
-
-The system is designed to be robust:
-- If RoBERTa model is unavailable, it falls back to keyword filtering
-- If OpenAI API fails, errors are logged and processing continues
-- Invalid rumor types are filtered out during verification
 
 ## Development
 
-### Adding New Rumor Types
+### Adding New Rumor Detection
 
 1. Update `RUMORS` dictionary in `rumors_constants.py`
 2. Add relevant keywords to `keyword_filter.py`
 3. Update prompts in `prompts.py` if needed
-
-
-TODO: ADD a specific user's scraped posts for an example
-TODO: ADD the exact rumor and also the rumor category
-TODO: Add example usage script (bash)
